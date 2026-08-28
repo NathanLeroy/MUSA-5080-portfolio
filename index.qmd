@@ -16,6 +16,8 @@ weekly notes, course assignments, and a final project applying data analysis to 
 
 <!-- CHANGE THIS: two or three sentences about yourself -->
 
+![Selfie while climbing in the Palisades, CA](/Users/nathanleroy/Documents/MUSA/MUSA-5080-portfolio/images/IMG_5002.jpeg)
+
 Hi! I'm currently a graduate student in the MUSA program at UPenn. I come from a computer science background, but with a lifelong passion for cartography and data visualization that's led me to this program. Most of my previous research has dealt with environmental remote sensing, machine learning, and computer vision.
 
 
