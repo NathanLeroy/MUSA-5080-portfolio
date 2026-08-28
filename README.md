@@ -48,7 +48,7 @@ Every week, all semester. Save is not render. Render is not push.
 
 ## Getting help
 
-- **In class:** ask two neighbors, then raise your hand
+- **In class:** ask two neighbors, then raise your hand ...
 - **Canvas discussion board:** post it — someone else has the same problem
 - **Office hours:** see the syllabus
 - **Email:** delmelle@design.upenn.edu
