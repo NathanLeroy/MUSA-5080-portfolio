@@ -17,8 +17,8 @@ urban policy questions.
 
 <!-- CHANGE THIS: two or three sentences about yourself -->
 
-I'm a student in the MUSA program at Penn. My background is in
-[YOUR BACKGROUND], and I'm interested in [YOUR INTERESTS].
+Hi! I'm currently a graduate student in the MUSA program at UPenn. I come from a computer science background, but with a lifelong passion for cartography and data visualization that's led me to this program. 
+
 
 ## What You'll Find Here
 
