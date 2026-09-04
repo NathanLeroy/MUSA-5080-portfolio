@@ -6,8 +6,6 @@ date: 2026-08-28
 
 ## What We Did
 
-<!-- CHANGE THIS: replace with your own notes -->
-
 Set up the portfolio workflow: made a repository from a template, cloned it with
 GitHub Desktop, edited files in RStudio, rendered with Quarto, and published to
 GitHub Pages.
@@ -33,13 +31,4 @@ sessionInfo()$R.version$version.string
 
 ## Reflection
 
-<!-- CHANGE THIS: 3-4 sentences -->
-
-What I want out of this course:
-
-One thing I'm nervous about:
-
-## Questions I Still Have
-
--
--
+I'm hoping to build a professional-looking portfolio out of this class. This is my first time using Quarto, and it's pretty cool to see what it can do!
