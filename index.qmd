@@ -16,7 +16,12 @@ weekly notes, course assignments, and a final project applying data analysis to 
 
 <!-- CHANGE THIS: two or three sentences about yourself -->
 
-![Selfie while climbing in the Palisades, CA](images/IMG_5002.jpeg)
+<!--
+![Selfie while climbing in the Palisades, CA](images/IMG_5002.jpeg){width=50% fig-align="center"}
+-->
+
+![<span style="display: block; text-align: center;">Selfie while climbing in the Palisades, CA</span>](images/IMG_5002.jpeg){width=50% fig-align="center"}
+
 
 Hi! I'm currently a graduate student in the MUSA program at UPenn. I come from a computer science background, but with a lifelong passion for cartography and data visualization that's led me to this program. Most of my previous research has dealt with environmental remote sensing, machine learning, and computer vision.
 
@@ -31,5 +36,5 @@ Hi! I'm currently a graduate student in the MUSA program at UPenn. I come from a
 
 <!-- CHANGE THIS -->
 
-- Email: nleroy@upenn.edu
+- Email: nleroy@upenn.edu (school) | nlleroy@icloud.com (personal)
 - GitHub: [NathanLeroy](https://github.com/NathanLeroy)
