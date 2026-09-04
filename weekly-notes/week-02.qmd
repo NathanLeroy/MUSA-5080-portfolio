@@ -4,23 +4,131 @@ description: ""
 date: 2026-09-04
 ---
 
-## What We Did
+# What We Did
 
-<!-- CHANGE THIS: replace with your own notes -->
+We started off with a quiz on last week's material before moving into an introductory lesson on R programming.
 
+## R Programming Basics
 
-## Key Concepts
+### Creating Code Blocks in MD
 
+::: callout-tip
+You can create code blocks with :::callout-tip, closing with :::
+:::
 
-## Reflection
+### Embedding LaTeX
 
-<!-- CHANGE THIS: 3-4 sentences -->
+\$ \$ for single characters in LaTeX; double for formulas.
 
-What I want out of this course:
+### Assigning a value to a variable:
 
-One thing I'm nervous about:
+object \<- function_name(input_data, arguments) \# comment Result \<- filter(counties, population \> 5000) \# keep the big ones!
 
-## Questions I Still Have
+### Installing packages:
 
--
--
+install.packages(“dplyr”) \# do once before using package for first time library(dplyr) \# do every time you want to use it
+
+### Data frame:
+
+data frame = tibble(nicer, prints prettier)
+
+### Verbs:
+
+filter() -\> picks rows \# filteR has an R in it!
+
+select() -\> picks columns \# seleCt has a C in it!
+
+mutate() -\> add a new computed column
+
+- Example: new \<- mutate(counties, income2)
+
+arrange() -\> change order of rows
+
+group_by() -\> similar to SQL GROUP BY; many rows become few
+
+- Collapses similar rows into one group
+
+summarize() -\> collapse data frame into one row of summary statistics
+
+### Example Workflow:
+
+::: callout-tip
+Step1 \<- filter(counties, moe_PCT \> 10)
+
+Step2 \<- arrange(Step1, desc(moe_PCT))
+
+Step3 \<- Select(NAME, moe_PCT) \# create dataFrame
+:::
+
+This works, but it leads to messy files and excess code.
+
+#### "And Then" Operator
+
+%\>% -\> chains together operations in R
+
+::: callout-tip
+New_data \<- Counties %\>%
+
+filter(moe_PCT) %\>%
+
+arrange(desc(moe_PCT))%\>%
+
+Select(NAME, moe_PCT)
+:::
+
+## Census Data
+
+The best source of data on the US population; started by James Madison.
+
+**Decennial Census**
+
+- Every 10 years, exactly 10 questions are asked of every person that is in the US
+- Basic questions on household size, age, etc.
+
+**American Community Survey (ACS)**
+
+- Started in 2005
+
+- Sample of the population gets more interesting questions such as "do you drive a car to work" or "what's your annual income?"
+
+- Approximately 3 percent of households are surveyed
+
+- From that sample, we come up with an estimate for the entire population
+
+- 2 versions: 1 year (for places \>65,000 people), and a 5-year running average (block group tract)
+
+**Example:**
+
+B19013-001E
+
+B -\> base table
+
+901 -\> table number
+
+00 -\> line number
+
+E -\> estimate
+
+M -\> MOE (margin of error)
+
+library(tidycensus)
+
+load_variables()\
+
+State-\>County-\>Tract (boundaries change all the time!)
+
+**GEOID**
+
+421010001001 (11 digits)
+
+- 42 (first 2): state
+
+- 101 (next 3): county
+
+- 0001001 (last ones): tract
+
+::: callout-tip
+data \<- get_acs(geography = "county", variables = c("B19013_001","B01003_001"), state = "PA", year = 2023, survey = "acs5")
+:::
+
+When running this code, we get the data in TIDY(long) format. We can add output = "wide" to display in TIDY(wide) format.

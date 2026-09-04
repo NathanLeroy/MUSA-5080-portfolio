@@ -138,5 +138,61 @@
     "title": "Week 2: Getting Set Up",
     "section": "Questions I Still Have",
     "text": "Questions I Still Have"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html",
+    "href": "weekly-notes/week-02.html",
+    "title": "Week 2: Getting Set Up",
+    "section": "",
+    "text": "We started off with a quiz on last week’s material before moving into an introductory lesson on R programming.\n\n\n\n\n\n\n\n\n\n\nTip\n\n\n\nYou can create code blocks with :::callout-tip, closing with :::\n\n\n\n\n\n$ $ for single characters in LaTeX; double for formulas.\n\n\n\nobject &lt;- function_name(input_data, arguments) # comment Result &lt;- filter(counties, population &gt; 5000) # keep the big ones!\n\n\n\ninstall.packages(“dplyr”) # do once before using package for first time library(dplyr) # do every time you want to use it\n\n\n\ndata frame = tibble(nicer, prints prettier)\n\n\n\nfilter() -&gt; picks rows # filteR has an R in it!\nselect() -&gt; picks columns # seleCt has a C in it!\nmutate() -&gt; add a new computed column\n\nExample: new &lt;- mutate(counties, income2)\n\narrange() -&gt; change order of rows\ngroup_by() -&gt; similar to SQL GROUP BY; many rows become few\n\nCollapses similar rows into one group\n\nsummarize() -&gt; collapse data frame into one row of summary statistics\n\n\n\n\n\n\n\n\n\nTip\n\n\n\nStep1 &lt;- filter(counties, moe_PCT &gt; 10)\nStep2 &lt;- arrange(Step1, desc(moe_PCT))\nStep3 &lt;- Select(NAME, moe_PCT) # create dataFrame\n\n\nThis works, but it leads to messy files and excess code.\n\n\n%&gt;% -&gt; chains together operations in R\n\n\n\n\n\n\nTip\n\n\n\nNew_data &lt;- Counties %&gt;%\nfilter(moe_PCT) %&gt;%\narrange(desc(moe_PCT))%&gt;%\nSelect(NAME, moe_PCT)\n\n\n\n\n\n\n\nThe best source of data on the US population; started by James Madison.\nDecennial Census\n\nEvery 10 years, exactly 10 questions are asked of every person that is in the US\nBasic questions on household size, age, etc.\n\nAmerican Community Survey (ACS)\n\nStarted in 2005\nSample of the population gets more interesting questions such as “do you drive a car to work” or “what’s your annual income?”\nApproximately 3 percent of households are surveyed\nFrom that sample, we come up with an estimate for the entire population\n2 versions: 1 year (for places &gt;65,000 people), and a 5-year running average (block group tract)\n\nExample:\nB19013-001E\nB -&gt; base table\n901 -&gt; table number\n00 -&gt; line number\nE -&gt; estimate\nM -&gt; MOE (margin of error)\nlibrary(tidycensus)\nload_variables()\n\nState-&gt;County-&gt;Tract (boundaries change all the time!)\nGEOID\n421010001001 (11 digits)\n\n42 (first 2): state\n101 (next 3): county\n0001001 (last ones): tract\n\n\n\n\n\n\n\nTip\n\n\n\ndata &lt;- get_acs(geography = “county”, variables = c(“B19013_001”,“B01003_001”), state = “PA”, year = 2023, survey = “acs5”)\n\n\nWhen running this code, we get the data in TIDY(long) format. We can add output = “wide” to display in TIDY(wide) format."
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#what-we-did",
+    "href": "weekly-notes/week-02.html#what-we-did",
+    "title": "Week 2: Getting Set Up",
+    "section": "",
+    "text": "We started off with a quiz on last week’s material before moving into an introductory lesson on R programming."
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#embedding-latex",
+    "href": "weekly-notes/week-02.html#embedding-latex",
+    "title": "Week 2: Getting Set Up",
+    "section": "Embedding LaTeX",
+    "text": "Embedding LaTeX"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#assigning-a-value-to-a-variable",
+    "href": "weekly-notes/week-02.html#assigning-a-value-to-a-variable",
+    "title": "Week 2: Getting Set Up",
+    "section": "Assigning a value to a variable:",
+    "text": "Assigning a value to a variable:\nobject &lt;- function_name(input_data, arguments) # comment Result &lt;- filter(counties, population &gt; 5000) # keep the big ones!"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#installing-packages",
+    "href": "weekly-notes/week-02.html#installing-packages",
+    "title": "Week 2: Getting Set Up",
+    "section": "Installing packages:",
+    "text": "Installing packages:\ninstall.packages(“dplyr”) # do once before using package for first time library(dplyr) # do every time you want to use it"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#data-frame",
+    "href": "weekly-notes/week-02.html#data-frame",
+    "title": "Week 2: Getting Set Up",
+    "section": "Data frame:",
+    "text": "Data frame:"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#r-programming-basics",
+    "href": "weekly-notes/week-02.html#r-programming-basics",
+    "title": "Week 2: Getting Set Up",
+    "section": "",
+    "text": "Tip\n\n\n\nYou can create code blocks with :::callout-tip, closing with :::\n\n\n\n\n\n$ $ for single characters in LaTeX; double for formulas.\n\n\n\nobject &lt;- function_name(input_data, arguments) # comment Result &lt;- filter(counties, population &gt; 5000) # keep the big ones!\n\n\n\ninstall.packages(“dplyr”) # do once before using package for first time library(dplyr) # do every time you want to use it\n\n\n\ndata frame = tibble(nicer, prints prettier)\n\n\n\nfilter() -&gt; picks rows # filteR has an R in it!\nselect() -&gt; picks columns # seleCt has a C in it!\nmutate() -&gt; add a new computed column\n\nExample: new &lt;- mutate(counties, income2)\n\narrange() -&gt; change order of rows\ngroup_by() -&gt; similar to SQL GROUP BY; many rows become few\n\nCollapses similar rows into one group\n\nsummarize() -&gt; collapse data frame into one row of summary statistics\n\n\n\n\n\n\n\n\n\nTip\n\n\n\nStep1 &lt;- filter(counties, moe_PCT &gt; 10)\nStep2 &lt;- arrange(Step1, desc(moe_PCT))\nStep3 &lt;- Select(NAME, moe_PCT) # create dataFrame\n\n\nThis works, but it leads to messy files and excess code.\n\n\n%&gt;% -&gt; chains together operations in R\n\n\n\n\n\n\nTip\n\n\n\nNew_data &lt;- Counties %&gt;%\nfilter(moe_PCT) %&gt;%\narrange(desc(moe_PCT))%&gt;%\nSelect(NAME, moe_PCT)"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#census-data",
+    "href": "weekly-notes/week-02.html#census-data",
+    "title": "Week 2: Getting Set Up",
+    "section": "",
+    "text": "The best source of data on the US population; started by James Madison.\nDecennial Census\n\nEvery 10 years, exactly 10 questions are asked of every person that is in the US\nBasic questions on household size, age, etc.\n\nAmerican Community Survey (ACS)\n\nStarted in 2005\nSample of the population gets more interesting questions such as “do you drive a car to work” or “what’s your annual income?”\nApproximately 3 percent of households are surveyed\nFrom that sample, we come up with an estimate for the entire population\n2 versions: 1 year (for places &gt;65,000 people), and a 5-year running average (block group tract)\n\nExample:\nB19013-001E\nB -&gt; base table\n901 -&gt; table number\n00 -&gt; line number\nE -&gt; estimate\nM -&gt; MOE (margin of error)\nlibrary(tidycensus)\nload_variables()\n\nState-&gt;County-&gt;Tract (boundaries change all the time!)\nGEOID\n421010001001 (11 digits)\n\n42 (first 2): state\n101 (next 3): county\n0001001 (last ones): tract\n\n\n\n\n\n\n\nTip\n\n\n\ndata &lt;- get_acs(geography = “county”, variables = c(“B19013_001”,“B01003_001”), state = “PA”, year = 2023, survey = “acs5”)\n\n\nWhen running this code, we get the data in TIDY(long) format. We can add output = “wide” to display in TIDY(wide) format."
   }
 ]
