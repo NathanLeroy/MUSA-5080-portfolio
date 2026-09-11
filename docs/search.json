@@ -102,7 +102,7 @@
     "href": "assignments/index.html",
     "title": "Assignments",
     "section": "",
-    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\nNo matching items"
+    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nAssignment 2: Who Do We Know the Least About?\n\n\n\n\n\n\n\n\nSep 10, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "weekly-notes/index.html",
@@ -194,5 +194,61 @@
     "title": "Week 2: Getting Set Up",
     "section": "",
     "text": "The best source of data on the US population; started by James Madison.\nDecennial Census\n\nEvery 10 years, exactly 10 questions are asked of every person that is in the US\nBasic questions on household size, age, etc.\n\nAmerican Community Survey (ACS)\n\nStarted in 2005\nSample of the population gets more interesting questions such as “do you drive a car to work” or “what’s your annual income?”\nApproximately 3 percent of households are surveyed\nFrom that sample, we come up with an estimate for the entire population\n2 versions: 1 year (for places &gt;65,000 people), and a 5-year running average (block group tract)\n\nExample:\nB19013-001E\nB -&gt; base table\n901 -&gt; table number\n00 -&gt; line number\nE -&gt; estimate\nM -&gt; MOE (margin of error)\nlibrary(tidycensus)\nload_variables()\n\nState-&gt;County-&gt;Tract (boundaries change all the time!)\nGEOID\n421010001001 (11 digits)\n\n42 (first 2): state\n101 (next 3): county\n0001001 (last ones): tract\n\n\n\n\n\n\n\nTip\n\n\n\ndata &lt;- get_acs(geography = “county”, variables = c(“B19013_001”,“B01003_001”), state = “PA”, year = 2023, survey = “acs5”)\n\n\nWhen running this code, we get the data in TIDY(long) format. We can add output = “wide” to display in TIDY(wide) format."
+  },
+  {
+    "objectID": "assignments/assignment2 .html",
+    "href": "assignments/assignment2 .html",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#setup",
+    "href": "assignments/assignment2 .html#setup",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#the-question",
+    "href": "assignments/assignment2 .html#the-question",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "The question",
+    "text": "The question\nEvery number the American Community Survey publishes is an estimate drawn from a sample, not a count. That means every number comes with a margin of error — a statement about how wrong it might be.\nIn this analysis, I’m looking to see how population and the measurement of reliability are related, using the number of college-educated individuals in each county as an example."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#pulling-the-data",
+    "href": "assignments/assignment2 .html#pulling-the-data",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Pulling the data",
+    "text": "Pulling the data\n\nmy_state &lt;- \"CA\"        # two-letter abbreviation of state\nmy_variable &lt;- \"B15003_022\"     # variable code\n\n\ncounty_data &lt;- get_acs(\n  geography = \"county\",\n  variables = my_variable,\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\"\n)\n\nThis code displays the first few rows of our new county_data table.\n\ndim(county_data)\n\n[1] 58  5\n\nhead(county_data)\n\n# A tibble: 6 × 5\n  GEOID NAME                         variable   estimate   moe\n  &lt;chr&gt; &lt;chr&gt;                        &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;\n1 06001 Alameda County, California   B15003_022   341463  4001\n2 06003 Alpine County, California    B15003_022      264   102\n3 06005 Amador County, California    B15003_022     5027   492\n4 06007 Butte County, California     B15003_022    28185  1349\n5 06009 Calaveras County, California B15003_022     5242   616\n6 06011 Colusa County, California    B15003_022     1579   339\n\n\n\n\n\n\n\n\nTip\n\n\n\nEach of the 58 counties in CA are represented in this table, with GEOID, name of the county, variable name, estimate, and margin of error forming the 5 columns."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#how-big-is-the-margin-of-error",
+    "href": "assignments/assignment2 .html#how-big-is-the-margin-of-error",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "How big is the margin of error?",
+    "text": "How big is the margin of error?\nA margin of error of 3,000 means something very different for an estimate of 20,000 than for an estimate of 200,000. To compare across places, we need it as a percentage.\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(moe_pct = moe / estimate * 100)\n\n\ncounty_data %&gt;%\n  arrange(desc(moe_pct)) %&gt;%\n  select(NAME, estimate, moe, moe_pct) %&gt;%\n  head(10)\n\n# A tibble: 10 × 4\n   NAME                         estimate   moe moe_pct\n   &lt;chr&gt;                           &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;\n 1 Sierra County, California         325   130    40  \n 2 Alpine County, California         264   102    38.6\n 3 Trinity County, California       1164   309    26.5\n 4 Modoc County, California         1031   234    22.7\n 5 Colusa County, California        1579   339    21.5\n 6 Mono County, California          1814   370    20.4\n 7 Del Norte County, California     2540   432    17.0\n 8 Glenn County, California         2314   379    16.4\n 9 Mariposa County, California      2582   401    15.5\n10 Plumas County, California        2031   313    15.4\n\n\nSierra County and Alpine County have by far the greatest MOE, followed by Trinity, Modoc, and Colusa Counties."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#sorting-counties-into-reliability-categories",
+    "href": "assignments/assignment2 .html#sorting-counties-into-reliability-categories",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Sorting counties into reliability categories",
+    "text": "Sorting counties into reliability categories\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 5  ~ \"High confidence\",\n    moe_pct &lt; 10 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\ncount(county_data, reliability)\n\n# A tibble: 3 × 2\n  reliability         n\n  &lt;chr&gt;           &lt;int&gt;\n1 High confidence    28\n2 Low confidence     17\n3 Moderate           13\n\n\nUsing our reliability cutoffs, 28 counties fall into a “high confidence” category, 13 into “moderate confidence”, and 17 into “low confidence”. The percentiles were chosen somewhat arbitrarily, but they seem reasonable for this assignment."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#is-the-margin-of-error-bigger-in-small-places",
+    "href": "assignments/assignment2 .html#is-the-margin-of-error-bigger-in-small-places",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Is the margin of error bigger in small places?",
+    "text": "Is the margin of error bigger in small places?\nTo answer this we need population and our variable side by side, in the same row. That means a wide pull.\n\ncounty_wide &lt;- get_acs(\n  geography = \"county\",\n  variables = c(myvar = my_variable,\n                pop   = \"B01003_001\"),\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\",\n  output = \"wide\"\n)\n\nhead(county_wide)\n\n# A tibble: 6 × 6\n  GEOID NAME                         myvarE myvarM    popE  popM\n  &lt;chr&gt; &lt;chr&gt;                         &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;\n1 06001 Alameda County, California   341463   4001 1651949    NA\n2 06003 Alpine County, California       264    102    1695   234\n3 06005 Amador County, California      5027    492   41029    NA\n4 06007 Butte County, California      28185   1349  209470    NA\n5 06009 Calaveras County, California   5242    616   45995    NA\n6 06011 Colusa County, California      1579    339   21895    NA\n\n\nIn this table, popE = estimate, and popM = MOE.\n\ncounty_wide &lt;- county_wide %&gt;%\n  mutate(moe_pct = myvarM / myvarE * 100) %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 5  ~ \"High confidence\",\n    moe_pct &lt; 15 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\nThe following block compares the average population of counties in each reliability category.\n\ncounty_wide %&gt;%\n  group_by(reliability) %&gt;%\n  summarize(\n    n_counties = n(),\n    avg_population = mean(popE)\n  )\n\n# A tibble: 3 × 3\n  reliability     n_counties avg_population\n  &lt;chr&gt;                &lt;int&gt;          &lt;dbl&gt;\n1 High confidence         28       1310938.\n2 Low confidence          10         15660.\n3 Moderate                20        118996.\n\n\nWe can see here that population is clearly correlated with confidence in deriving the population statistics; high-confidence counties have by far the highest population, and low-confidence counties have by far the lowest population numbers."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#what-this-means-for-policy",
+    "href": "assignments/assignment2 .html#what-this-means-for-policy",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "What this means for policy",
+    "text": "What this means for policy\nSierra County, located in a rural area in Northern California, has the state’s second-lowest population and scored the lowest in our reliability estimate. The neighboring Alpine County, which has the lowest population in the state, only scored slightly higher. Conversely, Los Angeles County, which has the highest population in the state, had the highest score for reliability.\nThis trend is related to how the ACS collects data; since it is based on a sample percentage rather than a complete survey of every person in the county, smaller counties have less people included in the study. With a smaller sample size, chances are higher that there may be variations in the study that aren’t necessarily representative of the whole. On the other hand, larger counties have larger samples that lead to more reliable estimates, as any variation is generally smoothed out the large number of observations.\nFor our variable (people with college educations), this could have the potential impact of improper funding allocation to areas that already have enough, as well as the diversion of education funds that could be sorely needed in a smaller county. For example, if it is improperly estimated that very people in Alpine County are college-educated (which is highly correlated with their children not going to college), while many people actually do want to go to college, the county could be passed over when it’s time to build a new university (like a CSU)."
   }
 ]
