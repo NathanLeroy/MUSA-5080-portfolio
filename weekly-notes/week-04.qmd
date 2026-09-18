@@ -1,0 +1,79 @@
+---
+title: "Week 4: Spatial Joins and GIS with R"
+description: "more tables"
+date: 2026-09-18
+---
+
+## Spatial Joins
+
+#### Left Join
+
+Everything in the first table gets preserved, and the matching information in the right table is added. Items not in the first table that are found in the second table are dropped.
+
+::: callout-tip
+left_join(income_23,income_15,by="GeoID")
+:::
+
+You can also do a right join, but this isn't necessary if you know how left join works.
+
+#### Inner Join
+
+This takes the intersection of the left and right table — the rows that are found in both.
+
+::: callout-tip
+inner_join(df1, df2, by = "common_column")
+:::
+
+## GIS with R
+
+### Coordinate Reference Systems (CRS)
+
+- 2 main families of CRS: geographic and projected
+
+  - Geographic Coordinate System (datum): units are in degrees from center of Earth
+
+    - Ellipsoid used to approximate the geoid; many different kinds of ellipsoids with different flattening ratios
+
+    - NAD27 -\> first datum/geographic coordinate system
+
+    - WGS84 is GPS standard
+
+    - Line of latitude is at equator; line of longitude is at the Prime Meridian
+
+    - Lat is flat
+
+  - Projected Coordinate System: need to flatten geoid into a 2D surface
+
+    - Conic, cylindrical, and planar coordinate systems
+
+    - Projections can either preserve shapes, areas, distance, or direction
+
+      - Make sure you're checking if your state plane is in feet or meters
+
+      - If state plane isn't convenient (for long/large states), use UTM zones
+
+- All spatial data comes with a coordinate reference system; it comes with a geometry column that has coordinates
+
+  ::: callout-tip
+  st_set_crs() -\> 2272 \# adds the correct CRS label, but doesn't change actual coordinates
+
+  st_transform(data, 2272) \# actually changes coordinate system
+  :::
+
+Make sure to import SF package; all calls use st\_....
+
+\[A \[C\] \] \[B \]
+
+|                 | A,B | A,C | A,A |
+|-----------------|-----|-----|-----|
+| st_intersects() | T   | T   | T   |
+| st_touches()    | T   | F   | F   |
+| st_within()     | F   | T   | F   |
+
+::: callout-note
+st_filter() -\> count the tracts
+
+st_intersection() -\> just common area
+
+st_union() -\> everything
+:::

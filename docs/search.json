@@ -109,7 +109,7 @@
     "href": "weekly-notes/index.html",
     "title": "Weekly Notes",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 3: Dplyr and more MOEs\n\n\ntable functions and acs data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Getting Set Up\n\n\n\n\n\n\n\n\nSep 4, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 4: Spatial Joins and GIS with R\n\n\nmore tables\n\n\n\n\n\nSep 18, 2026\n\n\n\n\n\n\n\nWeek 3: Dplyr and more MOEs\n\n\ntable functions and acs data\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: Getting Set Up\n\n\n\n\n\n\n\n\nSep 4, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "data/readme.html",
@@ -278,5 +278,26 @@
     "title": "Week 3: Dplyr and more MOEs",
     "section": "Remove “County, New York”",
     "text": "Remove “County, New York”\ncounty_data %&gt;% arrange(desc(moe_pct))\n%&gt;% mutate(NAME = str_remove(NAME, ” County, New York”))\n%&gt;% slice_head(n = 15) %&gt;% ggplot(aes(x = reorder(NAME, estimate), y = estimate))\n+ geom_col()\n+ geom_errorbar(aes(ymin = estimate - moe, ymax = estimate + moe))\n+ coord_flip()"
+  },
+  {
+    "objectID": "weekly-notes/week-04.html",
+    "href": "weekly-notes/week-04.html",
+    "title": "Week 4: Spatial Joins and GIS with R",
+    "section": "",
+    "text": "Everything in the first table gets preserved, and the matching information in the right table is added. Items not in the first table that are found in the second table are dropped.\n\n\n\n\n\n\nTip\n\n\n\nleft_join(income_23,income_15,by=“GeoID”)\n\n\nYou can also do a right join, but this isn’t necessary if you know how left join works.\n\n\n\nThis takes the intersection of the left and right table — the rows that are found in both.\n\n\n\n\n\n\nTip\n\n\n\ninner_join(df1, df2, by = “common_column”)"
+  },
+  {
+    "objectID": "weekly-notes/week-04.html#spatial-joins",
+    "href": "weekly-notes/week-04.html#spatial-joins",
+    "title": "Week 4: Spatial Joins and GIS with R",
+    "section": "",
+    "text": "Everything in the first table gets preserved, and the matching information in the right table is added. Items not in the first table that are found in the second table are dropped.\n\n\n\n\n\n\nTip\n\n\n\nleft_join(income_23,income_15,by=“GeoID”)\n\n\nYou can also do a right join, but this isn’t necessary if you know how left join works.\n\n\n\nThis takes the intersection of the left and right table — the rows that are found in both.\n\n\n\n\n\n\nTip\n\n\n\ninner_join(df1, df2, by = “common_column”)"
+  },
+  {
+    "objectID": "weekly-notes/week-04.html#gis-with-r",
+    "href": "weekly-notes/week-04.html#gis-with-r",
+    "title": "Week 4: Spatial Joins and GIS with R",
+    "section": "GIS with R",
+    "text": "GIS with R\n\nCoordinate Reference Systems (CRS)\n\n2 main families of CRS: geographic and projected\n\nGeographic Coordinate System (datum): units are in degrees from center of Earth\n\nEllipsoid used to approximate the geoid; many different kinds of ellipsoids with different flattening ratios\nNAD27 -&gt; first datum/geographic coordinate system\nWGS84 is GPS standard\nLine of latitude is at equator; line of longitude is at the Prime Meridian\nLat is flat\n\nProjected Coordinate System: need to flatten geoid into a 2D surface\n\nConic, cylindrical, and planar coordinate systems\nProjections can either preserve shapes, areas, distance, or direction\n\nMake sure you’re checking if your state plane is in feet or meters\nIf state plane isn’t convenient (for long/large states), use UTM zones\n\n\n\nAll spatial data comes with a coordinate reference system; it comes with a geometry column that has coordinates\n\n\n\n\n\n\nTip\n\n\n\nst_set_crs() -&gt; 2272 # adds the correct CRS label, but doesn’t change actual coordinates\nst_transform(data, 2272) # actually changes coordinate system\n\n\n\nMake sure to import SF package; all calls use st_….\n[A [C] ] [B ]\n\n\n\n\nA,B\nA,C\nA,A\n\n\n\n\nst_intersects()\nT\nT\nT\n\n\nst_touches()\nT\nF\nF\n\n\nst_within()\nF\nT\nF\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nst_filter() -&gt; count the tracts\nst_intersection() -&gt; just common area\nst_union() -&gt; everything"
   }
 ]
