@@ -3,8 +3,8 @@ library(tidycensus)
 
 county_data <- get_acs(
   geography = "county",
-  variables = my_variable,
-  state = my_state,
+  variables = "B07012_002",
+  state = "NY",
   year = 2023,
   survey = "acs5"
 )
@@ -35,7 +35,6 @@ county_data %>%
 
 # let's make it less horrible
 # reduce to 15 most unreliable.
-
 county_data %>%
   arrange(desc(moe_pct)) %>%
   slice_head(n = 15) %>%

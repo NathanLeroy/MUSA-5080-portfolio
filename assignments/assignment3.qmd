@@ -1,0 +1,683 @@
+---
+title: "Assignment 3: Verify the Claim"
+subtitle: "Analyzing ACS data with R"
+author: "Nathan Leroy"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+This analysis attempts to measure the accuracy of a 2018 article by the
+Philadelphia Media Network, "[New Census figures on Philly neighborhoods
+show inequality, high numbers of whites living in
+poverty](https://whyy.org/articles/new-census-figures-on-philly-neighborhoods-show-inequality-high-numbers-of-whites-living-in-poverty/)".
+This article uses American Community Survey (ACS) data to conduct a
+neighborhood-by-neighborhood analysis of poverty and demographic
+conditions across Philadelphia.
+
+According to the article, conditions in Philadelphia have gotten
+increasingly worse over the last 2 decades, with the following examples
+as proof:
+
+- Poverty rates in the neighborhood of Eastwick increased from 12 to 26
+  percent between the 2006-10 census and the 2013-17 census.
+
+- The median household income of Tioga-Nicetown declined from \$28,026
+  to \$17,493.
+
+- White poverty increased drastically throughout the city, with the
+  neighborhood of Holmesburg showing an over 900 percent increase (2% to
+  19%).
+
+- The neighborhood of Fairhill had a poverty rate of 61 percent, and its
+  median income dropped by \$300.
+
+- Visualizations of changes in poverty rates in Philadelphia show a
+  significant increase in many of the poorer areas of the city.
+
+The purpose of this analysis is to verify some of the claims made in the
+article by reconstructing the analysis of the ACS data and testing if
+the reported changes in the article are statistically significant.
+
+## Part 1: Import Data & Create Tables
+
+First, we install all required packages. An API key from the US Census
+Bureau is required for this project, and it needs to be installed before
+any data can be fetched. A key can be easily obtained
+[here](https://api.census.gov/data/key_signup.html).
+
+```{r}
+# Install required packages
+
+library(tidycensus)
+library(tidyverse)
+```
+
+After installing all the packages and confirming the API key is set up,
+we can start importing data from the ACS table.
+
+For this analysis, we will use the following codes:
+
+- B17001_001: total population of an area for which poverty can be
+  determined.
+
+- B17001_002: total number of people in that area who fall below the
+  poverty line.
+
+```{r}
+# Variables from ACS table: total in poverty and total below
+poverty_vars <- c(
+  total_poverty = "B17001_001",
+  below_poverty = "B17001_002"
+)
+```
+
+```{r}
+# 2013–2017 ACS 5-year estimates
+
+#| message: false
+#| warning: false
+
+poverty_2013_2017 <- get_acs(
+  geography = "tract",
+  variables = poverty_vars,
+  state = "PA",
+  county = "Philadelphia",
+  year = 2017,
+  survey = "acs5",
+  output = "wide",
+  moe_level = 90
+)
+
+poverty_2013_2017 <- poverty_2013_2017 %>%
+  mutate(
+    period = "2013–2017",
+    poverty_rate = (below_povertyE / total_povertyE) * 100
+  )
+```
+
+```{r}
+# 2006–2010 ACS 5-year estimates
+
+#| message: false
+#| warning: false
+
+poverty_2006_2010 <- get_acs(
+  geography = "tract",
+  variables = poverty_vars,
+  state = "PA",
+  county = "Philadelphia",
+  year = 2010,
+  survey = "acs5",
+  output = "wide",
+  moe_level = 90
+)
+
+poverty_2006_2010 <- poverty_2006_2010 %>%
+  mutate(
+    period = "2006–2010",
+    poverty_rate = (below_povertyE / total_povertyE) * 100
+  )
+```
+
+Here, we combine the data from each census into a single table for
+easier analysis.
+
+```{r}
+poverty_both <- bind_rows(
+  poverty_2006_2010,
+  poverty_2013_2017
+) %>%
+  select(
+    GEOID,
+    NAME,
+    period,
+    total_povertyE,
+    total_povertyM,
+    below_povertyE,
+    below_povertyM,
+    poverty_rate
+  ) %>%
+  arrange(GEOID, period)
+
+poverty_both
+```
+
+```{r}
+poverty_change <- poverty_both %>%
+  select(GEOID, NAME, period, poverty_rate) %>%
+  pivot_wider(
+    names_from = period,
+    values_from = poverty_rate
+  ) %>%
+  mutate(
+    change_percentage_points = `2013–2017` - `2006–2010`
+  ) %>%
+  arrange(desc(change_percentage_points))
+
+# View the tracts with the largest increases
+poverty_change %>%
+  select(
+    GEOID,
+    NAME,
+    `2006–2010`,
+    `2013–2017`,
+    change_percentage_points
+  ) %>%
+  print(n = 20)
+```
+
+## Part 2: Testing
+
+In this portion of our analysis, we want to determine how reliable our
+data for each census tract is. First, we calculate the MOE of the
+poverty rate for each census.
+
+```{r}
+# Calculate poverty rate and its MOE
+
+# 2006-2010
+poverty_2006_2010 <- poverty_2006_2010 %>%
+  mutate(
+    poverty_rate = below_povertyE / total_povertyE,
+    
+    poverty_rate_moe = moe_prop(
+      num = below_povertyE,
+      denom = total_povertyE,
+      moe_num = below_povertyM,
+      moe_denom = total_povertyM
+    )
+  )
+
+# 2013-2017
+poverty_2013_2017 <- poverty_2013_2017 %>%
+  mutate(
+    poverty_rate = below_povertyE / total_povertyE,
+    
+    poverty_rate_moe = moe_prop(
+      num = below_povertyE,
+      denom = total_povertyE,
+      moe_num = below_povertyM,
+      moe_denom = total_povertyM
+    )
+  )
+```
+
+We also want to calculate the coefficient of variation. We can do this
+using the two formulas below:
+
+$$ SE = \frac{\text{MOE}}{1.645} $$ And:
+$$ CV = \frac{\text{SE}}{estimate} * 100 $$
+
+We use the thresholds determined by Jurjevich et al. (2018) for this
+analysis:
+
+- CV \< 12% is reliable
+
+- CV \> 12% and CV \< 40% is somewhat reliable
+
+- CV \> 40% is unreliable
+
+```{r}
+# CV Calculations
+
+poverty_2006_2010 <- poverty_2006_2010 %>%
+  mutate(
+    poverty_rate_se = poverty_rate_moe / 1.645,
+    poverty_rate_cv = (poverty_rate_se / poverty_rate) * 100,
+    
+    reliability = case_when(
+      poverty_rate_cv < 12 ~ "Reliable",
+      poverty_rate_cv <= 40 ~ "Somewhat reliable",
+      poverty_rate_cv > 40 ~ "Unreliable",
+      TRUE ~ NA_character_
+    )
+  )
+
+poverty_2013_2017 <- poverty_2013_2017 %>%
+  mutate(
+    poverty_rate_se = poverty_rate_moe / 1.645,
+    poverty_rate_cv = (poverty_rate_se / poverty_rate) * 100,
+    
+    reliability = case_when(
+      poverty_rate_cv < 12 ~ "Reliable",
+      poverty_rate_cv <= 40 ~ "Somewhat reliable",
+      poverty_rate_cv > 40 ~ "Unreliable",
+      TRUE ~ NA_character_
+    )
+  )
+```
+
+After these calculations, we join the two periods together to create one
+dataset with one row per tract using an inner join.
+
+::: callout-tip
+We use an inner join because we want tracts that have data in both
+periods for the change calculation.
+:::
+
+```{r}
+poverty_change <- poverty_2006_2010 %>%
+  select(
+    GEOID,
+    NAME,
+    poverty_rate_2006_2010 = poverty_rate,
+    poverty_moe_2006_2010 = poverty_rate_moe,
+    poverty_cv_2006_2010 = poverty_rate_cv,
+    reliability_2006_2010 = reliability
+  ) %>%
+  inner_join(
+    poverty_2013_2017 %>%
+      select(
+        GEOID,
+        poverty_rate_2013_2017 = poverty_rate,
+        poverty_moe_2013_2017 = poverty_rate_moe,
+        poverty_cv_2013_2017 = poverty_rate_cv,
+        reliability_2013_2017 = reliability
+      ),
+    by = "GEOID"
+  )
+```
+
+Finally, we calculate the change in poverty rates by simply subtracting
+the 2006-10 rate from the newer 2013-17 rate.
+
+```{r}
+poverty_change <- poverty_change %>%
+  mutate(
+    change = poverty_rate_2013_2017 - poverty_rate_2006_2010
+  )
+
+# To make it easier to read, convert proportions into percents
+
+poverty_change <- poverty_change %>%
+  mutate(
+    change_percentage_points = change * 100
+  )
+```
+
+To calculate the MOE of the change between the two periods, we can use
+this formula:
+
+$$\text{MOE}_{\text{change}} = \sqrt{\text{MOE}_1^2 + \text{MOE}_2^2}$$
+
+```{r}
+poverty_change <- poverty_change %>% mutate(
+  change_moe = sqrt( poverty_moe_2006_2010^2 + poverty_moe_2013_2017^2 ) )
+```
+
+```{r}
+poverty_change <- poverty_change %>%
+  mutate(
+    change_lower = change - change_moe,
+    change_upper = change + change_moe
+  )
+```
+
+Now, we can check if the change is statistically significant at the 90%
+confidence interval. If the change is larger than the MOE we calculated
+earlier, the it is considered to be statistically significant.
+
+```{r}
+poverty_change <- poverty_change %>%
+  mutate(
+    change_significant = abs(change) > change_moe
+  )
+```
+
+Several census tracts have missing or incomplete values. We can run the
+script below to identify all of these tracts before deciding what to do
+with them.
+
+```{r}
+poverty_change %>%
+  filter(
+    is.na(poverty_rate_2006_2010) |
+      is.na(poverty_rate_2013_2017) |
+      is.na(change)
+  ) %>%
+  select(
+    GEOID,
+    NAME,
+    poverty_rate_2006_2010,
+    poverty_rate_2013_2017,
+    change
+  )
+```
+
+For this analysis, we will drop any incomplete rows, as the poverty
+level cannot be accurately calculated.
+
+```{r}
+poverty_analysis <- poverty_change %>%
+  filter(
+    !is.na(change),
+    !is.na(change_moe),
+    !is.na(change_significant)
+  )
+```
+
+After the incomplete rows are dropped, we can calculate the total amount
+of tracts with a detectable change in poverty level. 63/313
+(approximately 16.75 percent) of the tracts show a statistically
+significant change in poverty level.
+
+```{r}
+poverty_analysis %>%
+  summarise(
+    detectable_change = sum(change_significant),
+    no_detectable_change = sum(!change_significant),
+    total_tracts = n(),
+    percent_detectable = mean(change_significant) * 100,
+    percent_not_detectable = mean(!change_significant) * 100
+  )
+```
+
+This table displays all the calculated data associated with the tracts.
+The tracts with the greatest change in poverty level are displayed on
+top.
+
+```{r}
+poverty_analysis %>%
+  select(
+    GEOID,
+    NAME,
+    poverty_rate_2006_2010,
+    poverty_moe_2006_2010,
+    poverty_rate_2013_2017,
+    poverty_moe_2013_2017,
+    change_percentage_points,
+    change_moe,
+    reliability_2006_2010,
+    reliability_2013_2017,
+    change_significant
+  ) %>%
+  arrange(desc(abs(change_percentage_points)))
+```
+
+## Part 3: Results and Visualizations
+
+### Map
+
+We haven't imported the geometry of the tracts yet, so we need to run
+the following code block:
+
+```{r}
+
+#| include: false
+
+library(sf)
+
+invisible(capture.output(
+  tracts <- get_acs(
+    geography = "tract",
+    variables = "B01003_001",
+    state = "PA",
+    county = "Philadelphia",
+    year = 2017,
+    survey = "acs5",
+    geometry = TRUE
+  )
+))
+```
+
+Next, we join it to the main table.
+
+```{r}
+poverty_map <- tracts %>%
+  select(GEOID, geometry) %>%
+  left_join(
+    poverty_analysis,
+    by = "GEOID"
+  )
+```
+
+Finally, we display the map.
+
+```{r}
+#| fig-height: 8
+poverty_map %>%
+mutate(
+  change_percentage_points = change * 100
+) %>%
+  ggplot() +
+  geom_sf(
+    aes(fill = change_percentage_points),
+    color = "black"
+  ) +
+  scale_fill_gradient2(
+    name = "Change in poverty rate\n(percentage points)"
+  ) +
+  theme_void() +
+  labs(
+    title = "Change in Poverty Rates Across Philadelphia",
+    subtitle = "Census tract ACS 5-year estimates, 2006–2010 vs. 2013–2017",
+    caption = "Grey values indicate no data."
+  )
+```
+
+This map displays where there is a statistically significant change in
+poverty levels between the two censuses.
+
+```{r}
+#| fig-height: 7
+poverty_map %>%
+  mutate(
+    change_status = case_when(
+      change_significant & change > 0 ~ "Detectable increase",
+      change_significant & change < 0 ~ "Detectable decrease",
+      TRUE ~ "No detectable change"
+    )
+  ) %>%
+  ggplot() +
+  geom_sf(
+    aes(fill = change_status),
+    color = "black",
+    linewidth = 0.3
+  ) +
+  theme_void() +
+  labs(
+    title = "Statistically Significant Changes in Philadelphia Poverty Rates",
+    subtitle = "Census tract ACS 5-year estimates, 2006–2010 vs. 2013–2017",
+    fill = "Change status",
+    caption = "A detectable change falls outside of the 90% confidence interval."
+  )
+```
+
+### Errorbar Visualization
+
+This visualization shows only the statistically significant changes in
+poverty rates between the two time periods. The bars represent the
+estimated change, while the error bars (thinner black bars) represent
+the 90% margin of error.
+
+```{r}
+poverty_analysis %>%
+  filter(change_significant) %>%
+  arrange(change) %>%
+  slice_head(n = 15) %>%
+  ggplot(aes(x = reorder(GEOID, change), y = change * 100)) +
+  geom_col(aes(fill = change > 0)) +
+  geom_errorbar(
+    aes(
+      ymin = (change - change_moe) * 100,
+      ymax = (change + change_moe) * 100
+    ),
+    width = 0.3
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = "Statistically Significant Changes in Poverty Rates",
+    subtitle = "Philadelphia census tracts, 2006–2010 vs. 2013–2017",
+    x = "Census tract",
+    y = "Change in poverty rate (percentage points)",
+    caption = "Bars show estimated change; error bars show the 90% margin of error."
+  )
+```
+
+### Reliability Table
+
+This table displays the reliability of census tract poverty estimates
+based on their CV. Lower CV values indicate more reliable estimates.
+
+::: {.content-visible when-format="html"}
+<details>
+
+<summary><strong>Reliability table</strong></summary>
+
+```{r}
+library(gt)
+
+reliability_table <- poverty_analysis %>%
+  mutate(
+    cv = pmax(
+      poverty_cv_2006_2010,
+      poverty_cv_2013_2017,
+      na.rm = TRUE
+    ),
+    dot = case_when(
+      cv < 12 ~ "🟢",
+      cv <= 40 ~ "🟡",
+      TRUE ~ "🔴"
+    ),
+    flag = case_when(
+      cv < 12 ~ "Reliable",
+      cv <= 40 ~ "Somewhat reliable",
+      TRUE ~ "Unreliable"
+    )
+  ) %>%
+  arrange(desc(cv)) %>%
+  select(
+    dot,
+    GEOID,
+    poverty_cv_2006_2010,
+    poverty_cv_2013_2017,
+    flag
+  )
+
+reliability_table %>%
+  gt() %>%
+  fmt_number(
+    columns = c(poverty_cv_2006_2010, poverty_cv_2013_2017),
+    
+  ) %>%
+  cols_label(
+    dot = "",
+    GEOID = "Census tract",
+    poverty_cv_2006_2010 = "CV (%)\n2006–2010",
+    poverty_cv_2013_2017 = "CV (%)\n2013–2017",
+    flag = "Reliability"
+  ) %>%
+  cols_align( align = "center", columns = dot
+  ) %>%
+  tab_header(
+    title = "Reliability of Philadelphia Census Tract Poverty Estimates",
+    subtitle = "ACS 5-year estimates, 2006–2010 and 2013–2017"
+  ) %>%
+  tab_source_note(
+    "Reliability thresholds follow Jurjevich et al. (2018): CV < 12% reliable, 12–40% somewhat reliable, > 40% unreliable."
+  )
+```
+
+</details>
+:::
+
+## Part 4: Adjudication of Claims
+
+A challenge of this project is that the census tracts found in the ACS
+dataset do not correspond to traditional boundaries of Philadelphia
+neighborhoods, which are somewhat informal and not collected or defined
+by the city for official use. Therefore, we have to estimate which
+tracts fall into the neighborhoods the article is analyzing. This
+process is naturally a source of error in this project.
+
+![Philadelphia Neighborhood Maps - Revolve Philly Group \| Map
+...](https://i.pinimg.com/736x/16/09/2d/16092d197f53e945fcdd5f2ad911574e.jpg){width="506"}
+
+The article particularly analyzes:
+
+- Fairhill (26): located in North Philadelphia; a predominantly white
+  neighborhood. This registered the highest poverty rate in the city, 61
+  percent. This article explains how low-income neighborhoods are at
+  particular risk of falling further into poverty, using Fairhill as an
+  example.
+
+  - Analysis: While the area around Fairhill did indeed see an average
+    increase in poverty based on the map, few of these changes were
+    statistically significant. Although the data does show that poverty
+    increased slightly here, there is limited statistical evidence that
+    poverty increased beyond the bounds of the variability of the ACS
+    data.
+
+- Eastwick (10): located Southwest Philadelphia: a predominantly black
+  and low-income neighborhood. This neighborhood showed the greatest
+  poverty-rate increase of any community, going from 12 to 26 percent.
+
+  - Analysis: From our map in part 3, there did not appear to be any
+    statistically significant increases in poverty rate during the study
+    period. In fact, some of the areas showed a statistically
+    significant decrease in poverty rate. This contrasts with the claim
+    of the article that the poverty rate has more than doubled in this
+    area. Since all of our census tract data from Southwest Philadelphia
+    shows either statistically significant decline in poverty or no
+    statistically significant change, we can confidently refute this
+    claim.
+
+- Holmesburg (50): located in Northeast Philadelphia: a predominantly
+  white, working-class neighborhood. The article claims that poverty
+  skyrocketed here, increasing more than 9x from 2 percent to 19
+  percent.
+
+  - In the Northeast Philadelphia area, there is a mix of statistically
+    significant increases in poverty, statistically significant
+    decreases, and non-significant changes. It seems unlikely for a 9x
+    increase in poverty to occur in an area around here, but since the
+    neighborhood boundaries do not correspond exactly with the census
+    tracts, we cannot confidently confirm or refute the claim
+    specifically for Holmesburg.
+
+- Tioga-Nicetown (31): a predominantly black neighborhood located in
+  Northwest Philadelphia: according to the article, the median income of
+  this neighborhood dropped from 28,026 to 17,493, the largest drop in
+  the city.
+
+  - Analysis: in the census tract nearest to Tioga-Nicetown, a
+    statistically significant increase in poverty can be observed. This
+    corresponds with the 40 percent decrease in median income reported
+    in the article. Areas bordering the neighborhood did not see
+    statistically significant increases in poverty, however. The
+    analysis in the article appears to be valid.
+
+## Part 5: Conclusion
+
+Philadelphia continues to suffer from high poverty rates, particularly
+around minority-heavy areas in North Philly and West Philly. Income
+inequality is particularly high here, with statistically significant
+increases in wealth being observed between the 2010 and 2017 census.
+However, many lower-income areas in North Philly are seeing
+statistically significant decreases in poverty rates, which may suggest
+a sign of hope for these communities.
+
+Therefore, this analysis provides mixed evidence for the article's
+claims. Changes in poverty were not uniform across Philadelphia, and
+some areas in close proximity to each other experienced significant
+increases in poverty while some experienced significant decreases. Many
+other areas experienced no statistically significant changes at all. The
+data in many of these census tracts was deemed either "somewhat
+reliable" or "unreliable" based on its MOE, and a more detailed and
+complete survey of this area is necessary to get fully accurate results.
+Additionally, it would improve the accuracy of this analysis to conduct
+the survey by neighborhood instead of by census tract; however, it would
+be quite logistically challenging.
