@@ -1,0 +1,62 @@
+---
+title: "Week 6: Machine Learning"
+description: ""
+date: 2026-09-25
+---
+
+If we have some data on where rents exceed our expectation, and we want to predict where rents will exceed a specific threshold:
+
+- Income = 30,000 -\> rent = 1000
+
+- Income = 100,000 -\> rent = 3000
+
+- Income = 250,000 -\> rent = 6000
+
+We can have a formula:
+
+$Y = f(x) + e$
+
+Where Y is rent, f(x) is unknown, and e is everything else.
+
+We can use different kinds of classifiers, from linear (rigid but easy to explain/interpret) to neural networks (flexible but complex).
+
+The linear regression equation comes up with a best-fit line:
+
+$$\hat{y} = \beta_0 + \beta_i x_i + \epsilon$$
+
+We can use the lm() function to fit a linear model in R.
+
+This outputs the following table:
+
+| Summary(M1) | Estimate | Standard Error | T-value | P-value |
+|-------------|----------|----------------|---------|---------|
+| Intercept   | 690.0    | S              | 18.2    | \<2e-16 |
+| med_inc     | 0.0081   | 0.0005         | 16.2    | \<2e-16 |
+
+0.0081 is dollars of monthly rent per dollar of annual income.
+
+Noise in Y goes in the residuals; this is systemic variation (not noise). Noise in X flattens the slope.
+
+#### Test/Train Datasets
+
+We want to split the data into two parts, one for testing and one for training.
+
+- 80% training and 20% test is the generally accepted split
+
+#### Cross-Validation
+
+K-Fold -\> we split the data into several chunks, called folds.
+
+- Shuffle the data and split it into k distinct groups
+
+- For each iteration, use one group as the test set and the remaining k-1 groups combined as their training set
+
+- Repeat for each fold, and evaluate the RMSE for each one; lower RMSE is better
+
+- Combine and average the evaluation scores from all runs
+
+Need to avoid excessively strict model to avoid overfitting.
+
+#### How to pick features?
+
+Try to avoid multicollinearity (where 2 or more predictors are highly correlated with each other); it's mostly harmless, but check prediction.
