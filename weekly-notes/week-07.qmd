@@ -1,0 +1,23 @@
+---
+title: "Week 8: LISA"
+description: ""
+date: 2026-10-23
+---
+
+## LISA
+
+LISA: local indicators of spatial association
+
++----------------------+------------------------------------+--------------------------+
+|                      | Neighbors underpredicted           | Neighbors overpredicted  |
++======================+====================================+==========================+
+| **High Spatial Lag** | 1 AM \> Mean                       | 1 AM \> mean             |
+|                      |                                    |                          |
+|                      | Neighbors \> mean                  | Neighbors \< mean        |
+|                      |                                    |                          |
+|                      | Underpredict -\> missing something |                          |
++----------------------+------------------------------------+--------------------------+
+| **Low Spatial Lag**  | 1 AM \< mean                       | Pocket of overprediction |
+|                      |                                    |                          |
+|                      | Neighbors \> mean                  |                          |
++----------------------+------------------------------------+--------------------------+

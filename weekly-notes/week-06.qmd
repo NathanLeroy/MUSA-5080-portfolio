@@ -1,0 +1,120 @@
+---
+title: "Week 7: New Adjustments"
+description: ""
+date: 2026-09-25
+---
+
+### The fold that broke
+
+- One small district had all tracts in test fold
+
+- Model was trained without seeing that level, so it can't predict it
+
+- To fix, merge small groups before cross-validation
+
+### Same tools - new unit and shape
+
+|         | Previous Assignment         | House Price Prediction      |
+|---------|-----------------------------|-----------------------------|
+| Unit    | Census tract (polygon)      | Single sale (point)         |
+| N       | -400                        | -20,000                     |
+| Count   | Crimes in the tract         | Crimes within 60ft of house |
+| Nearest | Distance to nearest station | Mean distance to 5 nearest  |
+| Place   | distance to City Hall       | same                        |
+
+### Spatial Lag
+
+``` r
+coods <- st_coordinates(sales)
+w_knn <- nblistw(knn2nb(knearneigh(coords, k=5), style="W"))
+
+sales$resid_lag <- lag.listw(w_knn, sales$resid)
+```
+
+Each house gets the average residual of its 5 nearest neighbors.
+
+## Moran’s I: the scary formula
+
+\[I = \frac{n}{\sum_i \sum_j w_{ij}} \cdot \frac{\sum_i \sum_j w_{ij}(x_i - \bar{x})(x_j - \bar{x})}{\sum_i (x_i - \bar{x})^2}\]
+
+It’s asking one question:
+
+> **When I’m above average, are my neighbors above average too?**
+
+## Five houses on a block
+
+Neighbors are the houses next door.
+
+| House | Residual | − mean (+16k) | Deviation |
+|-------|----------|---------------|-----------|
+| A     | +100k    |               | +84       |
+| B     | +80k     |               | +64       |
+| C     | +20k     |               | +4        |
+| D     | −50k     |               | −66       |
+| E     | −70k     |               | −86       |
+
+Positive residual means we **under**-predicted that house.
+
+## Multiply neighbors
+
+| Pair | Product                 |                      |
+|------|-------------------------|----------------------|
+| A–B  | (+84)(+64) = **+5,376** | both under-predicted |
+| B–C  | (+64)(+4) = **+256**    |                      |
+| C–D  | (+4)(−66) = **−264**    | different signs      |
+| D–E  | (−66)(−86) = **+5,676** | both over-predicted  |
+
+Each pair counts twice (A→B and B→A): sum = 2 × 11,044 = **22,088**
+
+Σ deviation² = 7,056 + 4,096 + 16 + 4,356 + 7,396 = **22,920**
+
+\[I = \frac{5}{8} \cdot \frac{22{,}088}{22{,}920} \approx \mathbf{0.60}\]
+
+Strong clustering: the under-predictions sit together, and so do the over-predictions.
+
+## Reading Moran’s I
+
+| I       | Pattern                | For our errors                             |
+|----------------|-------------------------|-------------------------------|
+| near +1 | similar values cluster | the model is missing something about place |
+| near 0  | no spatial pattern     | the errors look like noise in space        |
+| below 0 | neighbors differ       | rare for errors; check your weights        |
+
+## Moran's I Shuffling
+
+```         
+mc <- moran.mc(sales$resid, w_knn, nsim = 499)
+mc$statistic
+```
+
+```         
+mc$p.value
+```
+
+moran.mc shuffles the values 499 times; if the real I beats the shuffles almost all of the times, the clustering isn't luck.
+
+## Clustered errors are a feature you haven’t built yet
+
+If Moran’s I is high, ask **what’s true about those places** that the model doesn’t know:
+
+- An amenity or disamenity you haven’t measured → **spatial feature**
+
+- Something about the whole neighborhood → **neighborhood fixed effect**
+
+- A relationship that differs by place → **interaction**
+
+Then refit, recompute I, and log both numbers.
+
+## “My spatial stats class says use a spatial lag model”
+
+\[y = \rho W y + X\beta + \varepsilon\]
+
+That’s the right tool for *inference about spillovers*. For **prediction** it fails three ways:
+
+1.  **It needs neighbors’ prices.** To price a house, you’d need the prices of houses that haven’t sold yet.
+
+2.  **It leaks.** In CV, a test house’s neighbors in the training set carry its answer.
+
+3.  **It explains nothing.** “Near expensive houses” is not a reason a policymaker can act on.
+
+**Our rule: spatial features of X, never Y.** Crime near the house is fine; prices near the house are not.
